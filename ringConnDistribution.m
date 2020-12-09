@@ -97,9 +97,8 @@ for ssidx = 1:length(ringConnListFull)
     end
 end
 hist(sharedRingRate,200)
-ylabel('Neuron count density');
+ylabel('Probability');
 xlabel('Fraction of rings the neuron take part in');
-
 
     
     
@@ -117,6 +116,10 @@ for ssidx = 1:length(ringConnListFull)
     end
 end
 hist(shareSuRingRate,200);
-ylabel('Ring count density');
+ylabel('Probability');
 xlabel('Fraction of rings sharing at least one same neuron');
+
+
+%% Fraction of Rings have shared neuron in 1s bin
+
     

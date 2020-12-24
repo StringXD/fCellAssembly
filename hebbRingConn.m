@@ -89,8 +89,45 @@ for ridx = 1:length(hebbRings)
     end
 end
 save('hebbRingSeq.mat','hebbRings','-v7.3');
-        
-        
+
+% Plot
+patchData = [];
+subplot(2,1,1);
+for tidx = 57
+    for ridx = 1:length(hebbRings)
+        currData = hebbRings{ridx,2}(hebbRings{ridx,2}(:,5)==tidx,:);
+        if isempty(currData)
+            continue;
+        end
+        for rpt = 1:size(currData,1)
+            %patch([currData(rpt,2),currData(rpt,4),currData(rpt,4),currData(rpt,2)],[ridx-0.35,ridx-0.35,ridx+0.35,ridx+0.35],[0.75,0,0],'FaceAlpha',.75,'LineStyle','none');
+            patchData = [patchData;ridx,currData(rpt,2),currData(rpt,4)];
+            line([currData(rpt,2),currData(rpt,4)],[ridx,ridx],'Color',[0.75,0,0],'LineWidth',2);
+            hold on;
+        end
+    end
+    title(sprintf('Trial %d',tidx));
+    %saveas(gcf,sprintf('hebbTrial%d.png',tidx));
+    %close all;    
+end
+ylabel('Alternative Rings');
+xlabel('Time (s)');
+subplot(2,1,2);
+edges = 1:0.05:7;
+counts = zeros(1,length(edges)-1);
+midpoint = zeros(1,length(edges)-1);
+for i = 1:length(counts)
+    counts(i) = sum(~(patchData(:,2)> edges(i+1) | patchData(:,3)<edges(i)));
+    midpoint(i) = mean(edges(i:i+1));
+end
+bar(midpoint,counts,'FaceColor',[0.8,0.8,0.8],'EdgeColor','none');
+ylabel('Counts');
+xlabel('Time (s)');
+    
+    
+    
+    
+    
 function [folderType,file,spkFolder,metaFolder,error_list]=jointFolder(folder,error_list,homedir)
 metaFolder=replace(folder,'\','/');
 metaFolder=fullfile(fullfile(homedir,'DataSum'),metaFolder);
@@ -242,3 +279,5 @@ for i=1:length(in)
     end
 end
 end
+
+

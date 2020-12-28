@@ -217,14 +217,14 @@ cumul = zeros(1,54);
 total = zeros(1,6);
 if ~isempty(post)
     sel_post_congru = find(ismember(suList,post(post(:,2) == candidate(2),1)));
-    sel_post_incongru = find(~sel_post_congru);
+    sel_post_incongru = find(~ismember(suList,post(post(:,2) == candidate(2),1)));
 else
     sel_post_congru = [];
     sel_post_incongru = [];
 end
 if ~isempty(pre)
     sel_pre_congru = find(ismember(suList,pre(pre(:,2) == candidate(2),1)));
-    sel_pre_incongru = find(~sel_pre_congru);
+    sel_pre_incongru = find(~ismember(suList,pre(pre(:,2) == candidate(2),1)));
 else
     sel_pre_congru = [];
     sel_pre_incongru = [];

@@ -164,11 +164,14 @@ for tidx = 17
         pcounts(i) = sum(~(rseData(:,2)> edges(i+1) | rseData(:,4)<edges(i)) & rseData(:,end) ~= 0);
         midpoint(i) = mean(edges(i:i+1));
     end
-    b = bar(midpoint,[pcounts;counts-pcounts]','stacked');
+    % frequency normalized unique ring number
+    freq = counts/(0.05*plotrowId);
+    pfreq = pcounts/(0.05*plotrowId);
+    b = bar(midpoint,[pfreq;freq-pfreq]','stacked');
     b.FaceColor = [0.8,0.8,0.8];
     b.CData(:,1) = [0.75,0,0];
     b.EdgeColor = 'none';
-    ylabel('Counts');
+    ylabel('Frequency(Hz)');
     xlabel('Time (s)');        
 end
 

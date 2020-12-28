@@ -106,13 +106,38 @@ for ssidx = 1:length(over1HzRingData)
         initRateSum = [initRateSum;initRate];
     end
 end
+
+
 hist(initRateSum,50)
 ylabel('Probability');
 xlabel('Initiation Rate');
-    
 
-
-
+% shuffled data
+shuffledRateSum = [];
+for iter = 1:1000
+    shuffledData = over1HzRingData;
+    initRateSum = [];
+    for ssidx = 1:length(shuffledData)
+        currData = shuffledData{ssidx};
+        if isempty(currData)
+            continue;
+        end
+        ringSuData = currData(:,7:11);
+        uniqueSus = unique(ringSuData);
+        uniqueSus(uniqueSus == -1) = [];
+        rsize = sum(ringSuData ~= -1,2);
+        psedoInitLabel = arrayfun(@(x) randi(x),rsize);
+        for i = uniqueSus(:)'
+            [rows,cols] = find(ringSuData == i);
+            initCount = sum(psedoInitLabel(rows) == cols);
+            initRate = initCount/length(rows);
+            initRateSum = [initRateSum;initRate];
+        end
+    end
+    shuffledRateSum = [shuffledRateSum,initRateSum];
+end
+meanShuffledData = mean(shuffledRateSum,2);
+hist(meanShuffledData)
 
 
 %%

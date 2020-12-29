@@ -139,6 +139,134 @@ end
 meanShuffledData = mean(shuffledRateSum,2);
 hist(meanShuffledData)
 
+%% plot loops with different lengths separately
+load over1HzRingData.mat
+
+initRateSum3 = [];
+initRateSum4 = [];
+initRateSum5 = [];
+
+for ssidx = 1:length(over1HzRingData)
+    currData = over1HzRingData{ssidx};
+    if isempty(currData)
+        continue;
+    end
+    ringSuData = currData(:,7:11);
+    uniqueSus = unique(ringSuData);
+    uniqueSus(uniqueSus == -1) = [];
+    rsize = sum(ringSuData ~= -1,2);
+    for i = uniqueSus(:)'
+        [rows,cols] = find(ringSuData == i);
+        initOutcomes = currData(rows,1);
+        initCount3 = sum(initOutcomes == cols & rsize(rows) == 3);
+        initRate3 = initCount3/sum(rsize(rows) == 3);
+        initCount4 = sum(initOutcomes == cols & rsize(rows) == 4);
+        initRate4 = initCount4/sum(rsize(rows) == 4);
+        initCount5 = sum(initOutcomes == cols & rsize(rows) == 5);
+        initRate5 = initCount5/sum(rsize(rows) == 5);
+        initRateSum3 = [initRateSum3;initRate3];
+        initRateSum4 = [initRateSum4;initRate4];
+        initRateSum5 = [initRateSum5;initRate5];
+    end
+end
+subplot(1,3,1);
+hist(initRateSum3)
+subplot(1,3,2)
+hist(initRateSum4)
+subplot(1,3,3)
+hist(initRateSum5)
+
+% shuffled data
+shuffledRateSum3 = [];
+shuffledRateSum4 = [];
+shuffledRateSum5 = [];
+for iter = 1:1000
+    shuffledData = over1HzRingData;
+    initRateSum3 = [];
+    initRateSum4 = [];
+    initRateSum5 = [];
+    for ssidx = 1:length(shuffledData)
+        currData = shuffledData{ssidx};
+        if isempty(currData)
+            continue;
+        end
+        ringSuData = currData(:,7:11);
+        uniqueSus = unique(ringSuData);
+        uniqueSus(uniqueSus == -1) = [];
+        rsize = sum(ringSuData ~= -1,2);
+        psedoInitLabel = arrayfun(@(x) randi(x),rsize);
+        for i = uniqueSus(:)'
+            [rows,cols] = find(ringSuData == i);
+            initCount3 = sum(psedoInitLabel(rows) == cols & rsize(rows) == 3);
+            initRate3 = initCount3/sum(rsize(rows) == 3);
+            initCount4 = sum(psedoInitLabel(rows) == cols & rsize(rows) == 4);
+            initRate4 = initCount4/sum(rsize(rows) == 4);
+            initCount5 = sum(psedoInitLabel(rows) == cols & rsize(rows) == 5);
+            initRate5 = initCount5/sum(rsize(rows) == 5);
+            initRateSum3 = [initRateSum3;initRate3];
+            initRateSum4 = [initRateSum4;initRate4];
+            initRateSum5 = [initRateSum5;initRate5];
+        end
+    end
+    shuffledRateSum3 = [shuffledRateSum3,initRateSum3];
+    shuffledRateSum4 = [shuffledRateSum4,initRateSum4];
+    shuffledRateSum5 = [shuffledRateSum5,initRateSum5];
+end
+save('shuffledInitRateSums.mat','shuffledRateSum3','shuffledRateSum4','shuffledRateSum5');
+meanShuffledData3 = mean(shuffledRateSum3,2);
+meanShuffledData4 = mean(shuffledRateSum4,2);
+meanShuffledData5 = mean(shuffledRateSum5,2);
+meanShuffledData3(isnan(meanShuffledData3)) = [];
+meanShuffledData4(isnan(meanShuffledData4)) = [];
+meanShuffledData5(isnan(meanShuffledData5)) = [];
+initRateSum3(isnan(initRateSum3)) = [];
+initRateSum4(isnan(initRateSum4)) = [];
+initRateSum5(isnan(initRateSum5)) = [];
+
+
+shuffledRateSum3(isnan(shuffledRateSum3(:,1)),:) = [];
+shuffledRateSum4(isnan(shuffledRateSum4(:,1)),:) = [];
+shuffledRateSum5(isnan(shuffledRateSum5(:,1)),:) = [];
+
+bootci3 = bootci(1000,@mean,shuffledRateSum3');
+bootci4 = bootci(1000,@mean,shuffledRateSum4');
+bootci5 = bootci(1000,@mean,shuffledRateSum5');
+
+[h1,p1] = kstest2(initRateSum3,meanShuffledData3);
+[h2,p2] = kstest2(initRateSum4,meanShuffledData4);
+[h3,p3] = kstest2(initRateSum5,meanShuffledData5);
+
+edges3 = 0.3:0.0006:0.36;
+edges4 = 0.2:0.001:0.3;
+edges5 = 0.15:0.001:0.25;
+
+cdfu3 = histcounts(bootci3(2,:),edges3,'Normalization','cdf');
+cdfb3 = histcounts(bootci3(1,:),edges3,'Normalization','cdf');
+cdfu4 = histcounts(bootci4(2,:),edges4,'Normalization','cdf');
+cdfb4 = histcounts(bootci4(1,:),edges4,'Normalization','cdf');
+cdfu5 = histcounts(bootci5(2,:),edges5,'Normalization','cdf');
+cdfb5 = histcounts(bootci5(1,:),edges5,'Normalization','cdf');
+
+X3 = (edges3(1:end-1)+edges3(2:end))/2;
+X4 = (edges4(1:end-1)+edges4(2:end))/2;
+X5 = (edges5(1:end-1)+edges5(2:end))/2;
+
+subplot(1,3,1);
+fill([X3,fliplr(X3)],[cdfb3,fliplr(cdfu3)],[0.8,0.8,0.8],'edgecolor','none','FaceAlpha',0.5);
+hold on;
+cdfplot(initRateSum3);
+cdfplot(meanShuffledData3);
+subplot(1,3,2);
+fill([X4,fliplr(X4)],[cdfb4,fliplr(cdfu4)],[0.8,0.8,0.8],'edgecolor','none','FaceAlpha',0.5);
+hold on;
+cdfplot(initRateSum4);
+cdfplot(meanShuffledData4);
+subplot(1,3,3);
+fill([X5,fliplr(X5)],[cdfb5,fliplr(cdfu5)],[0.8,0.8,0.8],'edgecolor','none','FaceAlpha',0.5);
+hold on;
+cdfplot(initRateSum5);
+cdfplot(meanShuffledData5);
+legend
 
 %%
 %idces from hebb_pattern_showcase.m

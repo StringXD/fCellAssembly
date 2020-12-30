@@ -4,7 +4,6 @@
 % times, or there is no exhaustion method (except a exhaustion set of
 % neurons)
 % standard : at least 1 showup in one trial in average
-% temp standard: >10 showup in the total recording session
 load rings.mat
 load ringSampleTrials.mat
 
@@ -111,7 +110,15 @@ for ssidx = 1:length(ringConnListFull)
         continue;
     end
     for ridx = 1:size(tempRings,1)
-        shareSuRingCount = sum(any(tempRings == tempRings(ridx,:) & tempRings ~= -1,2))-1;
+        transIds = tempRings(ridx,tempRings(ridx,:)~=-1);
+        for nidx = 1:length(transIds)
+            if nidx == 1
+                shareSuRingStat = any(tempRings == transIds(nidx),2);
+            else
+                shareSuRingStat = shareSuRingStat | any(tempRings == transIds(nidx),2);
+            end
+        end    
+        shareSuRingCount = sum(shareSuRingStat)-1;
         shareSuRingRate = [shareSuRingRate;shareSuRingCount/size(tempRings,1)];
     end
 end
@@ -120,6 +127,68 @@ ylabel('Probability');
 xlabel('Fraction of rings sharing at least one same neuron');
 
 
-%% Fraction of Rings have shared neuron in 1s bin
+%% Fraction of Rings share same neuron in 10ms and 200ms bin
 
-    
+load ringsDataSum.mat
+load tnumList.mat
+allSSData = cell(114,1);
+for ssidx = 1:114
+    ringSSData = ringsDset{ssidx};
+    if size(ringSSData,1) < 1000 
+        continue;
+    end
+    uniRingsAll = unique(ringSSData(:,7:end),'rows');
+    ringFreq = zeros(size(uniRingsAll,1),1);
+    for ridx = 1:size(uniRingsAll,1)
+        thisRing = uniRingsAll(ridx,:);
+        if sum(ismember(ringSSData(:,7:end),thisRing,'rows')) >= tnumList{ssidx}
+            ringFreq(ridx) = 1;
+        end
+    end
+    uniSuList = unique(uniRingsAll(logical(ringFreq),:));
+    uniSuList(uniSuList == -1) = [];
+    tempSuSharingSum = cell(length(uniSuList),2);
+    tidList = unique(ringSSData(:,5));
+    binData = cell(2,length(tidList));
+    for tidx = 1:length(tidList)
+        tid = tidList(tidx);
+        currTrialData = ringSSData(ismember(ringSSData(:,7:end),uniRingsAll(logical(ringFreq),:),'rows') & ringSSData(:,5) == tid,:);
+        binSize = [10,200];
+        for binSizeIdx = 1:2
+            binEdges = 1:binSize(binSizeIdx)/1000:7;
+            midTimes = (currTrialData(:,2) + currTrialData(:,4))/2;
+            for bin = 1:length(binEdges)-1
+                currBinData = currTrialData(midTimes > binEdges(bin) & midTimes < binEdges(bin+1),:);
+                uniSuBinned = unique(currBinData(:,7:11));
+                uniSuBinned(uniSuBinned == -1) = [];
+                uniRingBinned = unique(currBinData(:,7:11),'rows');
+                for suidx = 1:length(uniSuBinned)
+                    tempSuSharingSum{uniSuList == uniSuBinned(suidx),binSizeIdx} = [tempSuSharingSum{uniSuList == uniSuBinned(suidx),binSizeIdx}; sum(uniRingBinned == uniSuBinned(suidx),'all'),size(uniRingBinned,1)];
+                end
+            end
+        end
+    end
+    allSSData{ssidx} = tempSuSharingSum;
+end
+
+% summary and plot
+
+shareRate10 = [];
+shareRate200 = [];
+for ssidx = 1:length(allSSData)
+    currSSData = allSSData{ssidx};
+    if isempty(currSSData)
+        continue;
+    end
+    for suidx = 1:size(currSSData,1)
+        shareRate10 = [shareRate10;mean(currSSData{suidx,1}(:,1)./currSSData{suidx,1}(:,2))];
+        shareRate200 = [shareRate200;mean(currSSData{suidx,2}(:,1)./currSSData{suidx,2}(:,2))];
+    end
+end
+
+subplot(2,1,1);
+hist(shareRate10,20);
+subplot(2,1,2);
+hist(shareRate200,20);
+
+                

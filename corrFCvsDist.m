@@ -74,7 +74,7 @@ for bin=1:6
     pair_chains{bin}=pair_chain;
     clear pair_reg reg_chain_S1 reg_chain_S2 pair_chain conn_chain_S1 conn_chain_S2
 end
-edges = 0:0.5:4.5;
+edges = 0:0.5:3.5;
 thres = 100;
 mns = cell(length(edges)-1,1);
 mmn = zeros(length(edges)-1,1);
@@ -118,11 +118,17 @@ for distIdx = 1:length(edges)-1
     stdn(distIdx) = std(mn(:,2));
 end
 %% plot
-errorbar(0.5:0.5:4.5,mmn,stdn/sqrt(length(sorted_fpath)-1));
+errorbar(0.5:0.5:3.5,mmn,stdn/sqrt(length(sorted_fpath)-1));
 xlabel('Distance(mm)');
 ylabel('Functional coupling density');
-                
-    
+
+%% ANOVA
+for distIdx = 1:length(edges)-1
+    mns{distIdx} = [mns{distIdx},distIdx*ones(length(mns{distIdx}),1)];
+end
+mnss = cell2mat(mns)';
+groups = string(num2cell(mnss(3,:)*0.5));
+[p,tbl,stats] = anova1(mnss(2,:),groups);    
 
 
 

@@ -191,4 +191,7 @@ hist(shareRate10,20);
 subplot(2,1,2);
 hist(shareRate200,20);
 
+% Non-normal test
+[h1,p1] = adtest(shareRate10);
+[h2,p2] = adtest(shareRate200);
                 

@@ -18,7 +18,7 @@ load('../sums_conn.mat','sums_conn_str');
 chainsum = cell(length(sums_conn_str),2); % correct error
 % chainsum = cell(length(sums_conn_str),6); % S1 congru, S2 congru, incongru, non-mem, S1 congru error, S2 congru error
 % chainsumPred = cell(length(sums_conn_str),6); % S1 congru, S2 congru, incongru, non-mem, S1 congru error, S2 congru error
-for chainlen = 2:5
+for chainlen = 2:3
 for fidx=1:116
     disp(fidx)
     if opt.strict
@@ -32,7 +32,7 @@ for fidx=1:116
         onecon=sums_conn_str(fidx).sig_con;
     end
     %onecom=wave.get_com_map('onepath',strrep(sums_conn_str(fidx).folder,'zx/neupix','xd/data'),'peak',opt.peak); %per su center of mass, normalized FR
-    load(sprintf('com_str_nonmem_%d.mat',fidx));
+    load(sprintf('com_str_Newcrit_%d.mat',fidx));
     onecom = com_str;
     % construct data for sorting by com
     % compare correct error trials
@@ -86,6 +86,10 @@ for fidx=1:116
         realChainsCE(fidx,1,chainlen-1) = size(realChainsCELabel{fidx,1,chainlen-1},1);
         % incongru
         idxperms = nchoosek(incongruIdx,chainlen);
+        typeperms = arrayfun(@(x) sortedMat(x,2),idxperms);
+        incongrusel = any(diff(typeperms,1,2),2);
+        clear typeperms incongrusel
+        idxperms = idxperms(incongrusel);
         timeperms = arrayfun(@(x) sortedMat(x,1),idxperms);
         labelperms = arrayfun(@(x) incongruLabel(x),idxperms);
         clear idxperms
@@ -105,7 +109,7 @@ for fidx=1:116
         realChainsCE(fidx,2,chainlen-1) = size(realChainsCELabel{fidx,2,chainlen-1},1);
     end
 
-save(sprintf('chainSumAllN_%d_%d.mat',fidx,chainlen),'chainsumCE','realChainsCE','realChainsCELabel','-v7.3');
+save(sprintf('chainSumAllNcrit_%d_%d.mat',fidx,chainlen),'chainsumCE','realChainsCE','realChainsCELabel','-v7.3');
 
     
 end
